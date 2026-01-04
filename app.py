@@ -1,25 +1,26 @@
-# -------------------- Importaciones de la app --------------------
+# -------------------- Importaciones --------------------
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-import pymysql  # Necesario para la conexión a MySQL
+import pymysql
 
-# -------------------- Configuración Base de Datos Clever Cloud --------------------
+# -------------------- Configuración Base de Datos --------------------
 class BaseDatos:
     def __init__(self):
-        # 🔹 Datos directos de Clever Cloud
         self.host = "bhibtz5dpzno2aa2rxsz-mysql.services.clever-cloud.com"
         self.user = "uyri35qixwbzfzpf"
         self.password = "32ZI5cJ6oriW01DpE3T0"
         self.database = "bhibtz5dpzno2aa2rxsz"
         self.port = 3306
 
+        # 🔹 Conexión única con auth_plugin para MySQL 8
         self.con = pymysql.connect(
             host=self.host,
             user=self.user,
             password=self.password,
             database=self.database,
-            port=self.port
+            port=self.port,
+            auth_plugin='mysql_native_password'
         )
 
     def consultar(self, query, params=None):
@@ -27,8 +28,19 @@ class BaseDatos:
             cur.execute(query, params or [])
             return cur.fetchall()
 
+
+# -------------------- Función Singleton para Base de Datos --------------------
+@st.cache_resource(show_spinner=False)
+def get_db():
+    """
+    Esto asegura que Streamlit reutilice la conexión
+    entre refrescos de la página y múltiples usuarios.
+    """
+    return BaseDatos()
+
+
 # -------------------- Inicialización --------------------
-bd = BaseDatos()
+bd = get_db()
 
 st.set_page_config(page_title="Panel Delivery", layout="wide")
 st.title("🚚 Panel Delivery - Pedidos Activos y Reporte de Ventas")
@@ -61,10 +73,6 @@ if resultado:
     st.dataframe(pedidos_activos[["Pedido","Cliente","Teléfono","Dirección","Total","MedioPago","Tiempo (min)"]])
 else:
     st.info("No hay pedidos activos ahora.")
-
-# -------------------- REPORTE DE VENTAS --------------------
-st.header("💰 Reporte de Ventas")
-
 # Filtros
 col1, col2 = st.columns(2)
 with col1:
