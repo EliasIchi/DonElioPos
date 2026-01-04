@@ -1,4 +1,14 @@
+# Interfaz y app
 streamlit==1.26.0
-pandas==2.1.0
-pymysql==1.1.1
 customtkinter==5.2.2
+
+# Manejo de datos
+pandas==2.1.0
+numpy==1.25.2
+
+# Conexión MySQL
+PyMySQL==1.1.1
+
+# Extras útiles
+python-dateutil==2.8.2
+pytz==2023.3
