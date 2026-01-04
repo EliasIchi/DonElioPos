@@ -89,7 +89,7 @@ with col2:
 # 🔹 Filtro de medio de pago
 medio_pago = st.multiselect(
     "Filtrar por Medio de Pago",
-    options=["EFECTIVO","Mercado Pago QR","Transferencia","Cuenta Corriente","Débito","Crédito"],
+    options=["EFECTIVO","MERCADO PAGO QR","TRANSFERENCIA","CUENTA CORRIENTE","DÉBITO","CRÉDITO"],
     default=None
 )
 
@@ -99,7 +99,7 @@ SELECT
     p.id AS Pedido,
     c.nombre AS Cliente,
     p.total AS Total,
-    p.medio_pago AS MedioPago,
+    UPPER(p.medio_pago) AS MedioPago,  -- 🔹 Convertimos a mayúsculas
     p.fecha_inicio
 FROM pedidos p
 LEFT JOIN clientes c ON c.id = p.cliente_id
