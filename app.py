@@ -64,15 +64,22 @@ if resultado:
 else:
     st.info("No hay pedidos activos ahora.")
 
+from datetime import datetime, timedelta
+
+# Ajuste de hora local Argentina sin librerías extra
+def hoy_argentina():
+    """Devuelve la fecha de hoy según UTC−3 (Argentina)"""
+    return (datetime.utcnow() - timedelta(hours=3)).date()
+
 # -------------------- REPORTE DE VENTAS --------------------
 st.header("💰 Reporte de Ventas")
 
-# Filtros
+# Filtros de fecha ajustados
 col1, col2 = st.columns(2)
 with col1:
-    fecha_inicio = st.date_input("Desde", value=pd.to_datetime("today"))
+    fecha_inicio = st.date_input("Desde", value=hoy_argentina())
 with col2:
-    fecha_fin = st.date_input("Hasta", value=pd.to_datetime("today"))
+    fecha_fin = st.date_input("Hasta", value=hoy_argentina())
 
 medio_pago = st.multiselect(
     "Filtrar por Medio de Pago",
