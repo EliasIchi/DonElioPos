@@ -76,7 +76,12 @@ with col2:
 
 medio_pago = st.multiselect(
     "Filtrar por Medio de Pago",
-    options=["EFECTIVO","Mercado Pago QR","Transferencia","Cuenta Corriente","Débito","Crédito"],
+    options=['EFECTIVO',
+'MERCADO PAGO QR',
+'TRANSFERENCIA',
+'CUENTA CORRIENTE',
+'DÉBITO',
+'CRÉDITO'],
     default=None
 )
 
