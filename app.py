@@ -86,17 +86,7 @@ medio_pago = st.multiselect(
 )
 
 query_ventas = """
-SELECT 
-    p.id AS Pedido,
-    c.nombre AS Cliente,
-    p.total AS Total,
-    UPPER(p.medio_pago) AS MedioPago,
-    CONVERT_TZ(p.fecha_inicio, '+00:00', '-03:00') AS fecha_inicio
-FROM pedidos p
-LEFT JOIN clientes c ON c.id = p.cliente_id
-WHERE p.estado_cocina_id <> 5
-AND DATE(CONVERT_TZ(p.fecha_inicio, '+00:00', '-03:00')) BETWEEN %s AND %s
-ORDER BY p.fecha_inicio ASC
+SELECT p.id AS Pedido, c.nombre AS Cliente, p.total AS Total, UPPER(p.medio_pago) AS MedioPago, p.fecha_inicio FROM pedidos p LEFT JOIN clientes c ON c.id = p.cliente_id WHERE p.estado_cocina_id <> 5 AND DATE(p.fecha_inicio) BETWEEN %s AND %s
 
 """
 params = [fecha_inicio.strftime("%Y-%m-%d"), fecha_fin.strftime("%Y-%m-%d")]
