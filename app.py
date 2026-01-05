@@ -1,46 +1,38 @@
-# -------------------- Importaciones de la app --------------------
+# -------------------- Importaciones --------------------
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-import pymysql  # Necesario para la conexión a MySQL
+import pymysql
 
-# -------------------- Configuración Base de Datos Clever Cloud --------------------
-class BaseDatos:
-    def __init__(self):
-        # 🔹 Datos directos de Clever Cloud
-        self.host = "bhibtz5dpzno2aa2rxsz-mysql.services.clever-cloud.com"
-        self.user = "uyri35qixwbzfzpf"
-        self.password = "32ZI5cJ6oriW01DpE3T0"
-        self.database = "bhibtz5dpzno2aa2rxsz"
-        self.port = 3306
-
-        # 🔹 Conexión única
-        self.con = pymysql.connect(
-            host=self.host,
-            user=self.user,
-            password=self.password,
-            database=self.database,
-            port=self.port
-        )
-
-    def consultar(self, query, params=None):
-        with self.con.cursor() as cur:
+# -------------------- Función de conexión --------------------
+def ejecutar_query(query, params=None):
+    """Se conecta a Clever Cloud, ejecuta la query y cierra la conexión."""
+    CLOUD_DB = {
+        "host": "bhibtz5dpzno2aa2rxsz-mysql.services.clever-cloud.com",
+        "user": "uyri35qixwbzfzpf",
+        "password": "32ZI5cJ6oriW01DpE3T0",
+        "database": "bhibtz5dpzno2aa2rxsz",
+        "port": 3306,
+        "cursorclass": pymysql.cursors.DictCursor,
+        "connect_timeout": 10,
+        "autocommit": True
+    }
+    resultado = []
+    try:
+        con = pymysql.connect(**CLOUD_DB)
+        with con.cursor() as cur:
             cur.execute(query, params or [])
-            return cur.fetchall()
+            resultado = cur.fetchall()
+    except Exception as e:
+        st.error(f"❌ Error al consultar la BD: {e}")
+    finally:
+        try:
+            con.close()
+        except:
+            pass
+    return resultado
 
-# -------------------- Conexión única compartida --------------------
-@st.cache_resource(show_spinner=False)
-def get_db():
-    """
-    Streamlit va a cachear esta función y reutilizar la conexión.
-    No se abrirán conexiones extras al refrescar la página.
-    """
-    return BaseDatos()
-
-# 🔹 Inicializamos la conexión solo una vez
-bd = get_db()
-
-# -------------------- Streamlit --------------------
+# -------------------- Configuración Streamlit --------------------
 st.set_page_config(page_title="Panel Delivery", layout="wide")
 st.title("🚚 Panel Delivery - Pedidos Activos y Reporte de Ventas")
 
@@ -62,14 +54,13 @@ WHERE p.estado_cocina_id IN (1,2,3)
 ORDER BY p.fecha_inicio ASC
 """
 
-resultado = bd.consultar(query_activos)
-cols = ["Pedido","Cliente","Teléfono","Dirección","Total","MedioPago","fecha_inicio"]
+resultado = ejecutar_query(query_activos)
 
 if resultado:
-    pedidos_activos = pd.DataFrame(resultado, columns=cols)
+    pedidos_activos = pd.DataFrame(resultado)
     pedidos_activos["fecha_inicio"] = pd.to_datetime(pedidos_activos["fecha_inicio"])
     pedidos_activos["Tiempo (min)"] = (datetime.now() - pedidos_activos["fecha_inicio"]).dt.total_seconds() // 60
-    st.dataframe(pedidos_activos[["Pedido","Cliente","Teléfono","Dirección","Total","MedioPago","Tiempo (min)"]])
+    st.dataframe(pedidos_activos[["Pedido","Cliente","Telefono","Direccion","Total","MedioPago","Tiempo (min)"]])
 else:
     st.info("No hay pedidos activos ahora.")
 
@@ -101,17 +92,15 @@ LEFT JOIN clientes c ON c.id = p.cliente_id
 WHERE p.estado_cocina_id <> 5
 AND DATE(p.fecha_inicio) BETWEEN %s AND %s
 """
-
 params = [fecha_inicio.strftime("%Y-%m-%d"), fecha_fin.strftime("%Y-%m-%d")]
 
-ventas = bd.consultar(query_ventas, params)
+ventas = ejecutar_query(query_ventas, params)
 
 if ventas:
-    ventas_df = pd.DataFrame(ventas, columns=["Pedido","Cliente","Total","MedioPago","fecha_inicio"])
+    ventas_df = pd.DataFrame(ventas)
     if medio_pago:
         ventas_df = ventas_df[ventas_df["MedioPago"].isin(medio_pago)]
     st.dataframe(ventas_df)
-
     total_general = ventas_df["Total"].sum()
     st.markdown(f"**Total Ventas:** ${total_general:,.2f}")
 else:
