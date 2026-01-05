@@ -44,7 +44,7 @@ SELECT
     p.id AS Pedido,
     c.nombre AS Cliente,
     c.telefono AS Telefono,
-    p.direccion_entrega AS Direccion,
+    concat(direccion, " - ", direccion2) AS Direccion,
     p.total AS Total,
     p.medio_pago AS MedioPago,
     p.fecha_inicio
